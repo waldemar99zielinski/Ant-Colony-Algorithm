@@ -77,6 +77,10 @@ public class Ant {
         this.currentNode = currentNode;
     }
 
+    public ArrayList<String> getTrail() {
+        return trail;
+    }
+
     public void selectLink(ArrayList<Link> possibleLinks){
         if(this.isTravelling){
             ArrayList<Double> probabilities = getSelectionProbabilities(possibleLinks);
@@ -88,8 +92,9 @@ public class Ant {
                 totalProb += probabilities.get(i);
 
                 if(totalProb>= chosenProb){
-                    nextNode = possibleLinks.get(i).getSecondNode().getId();
-                    currentTravelCost = possibleLinks.get(i).getSetupCost();
+                    this.nextNode = possibleLinks.get(i).getSecondNode().getId();
+                    this.currentTravelCost = possibleLinks.get(i).getSetupCost();
+                    break;
                 }
             }
         }
@@ -99,7 +104,10 @@ public class Ant {
         double sum = 0.0;
         ArrayList<Double> probabilities = new ArrayList<>();
         for (Link link: possibleLinks) {
-            sum += Math.pow(link.getRoutingCost(), alpha) * Math.pow(link.getSetupCost(), beta);
+            if(!link.getSecondNode().getId().equals(this.previousNode)){
+                sum += Math.pow(link.getRoutingCost(), alpha) * Math.pow(link.getSetupCost(), beta);
+            }
+
         }
 
         for (Link link: possibleLinks) {

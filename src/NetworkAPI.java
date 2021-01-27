@@ -39,6 +39,12 @@ public class NetworkAPI {
 
 
     }
+    public void setupNetwork(){
+        for(Link link:network.links()){
+            link.setSetupCost(1.0);
+            link.setRoutingCost(1.0);
+        }
+    }
     public void saveNetwork(){
         SNDlibWriter writer = SNDlibIOFactory.newWriter(SNDlibIOFormat.NATIVE);
 
@@ -77,7 +83,10 @@ public class NetworkAPI {
             System.err.println("[ERR] NetworkAPI: setLinkPheromone: link doesn't exist. src="+sourceName+" dst="+directionName);
         }
 
-        links.forEach(link -> link.setRoutingCost(value));
+        links.forEach(link -> {
+            double currentPheromone = link.getRoutingCost();
+            link.setRoutingCost(currentPheromone + value);
+        });
         System.out.println("[INFO] NetworkAPI: setLinkPheromone: between "+links.get(0).getFirstNode().getId()+" "+links.get(0).getSecondNode().getId() +" val="+value);
     }
     public void evaporatePheromone(double evaporationRate){

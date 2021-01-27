@@ -5,37 +5,48 @@ import java.util.ArrayList;
 
 public class Colony {
 
-    private NetworkAPI network;
+    private final NetworkAPI network;
     private ArrayList<Ant> ants;
     private int numberOfAnts;
-    private String source;
-    private String destination;
+    private final String source;
+    private final String destination;
+
+    private int numberOfSolution = 0;
 
     //algorithm parameters
     private double alpha;
     private double beta;
-    private double evaporationRate;
-    private double Q;
+    private double evaporationRate = 0.5;
+    private double Q = 1;
 
-    private ArrayList<Link> bestTrail;
+    private ArrayList<String> bestTrail;
     private double bestSolution;
 
-    public Colony(NetworkAPI network, String source, String destination, double alpha, double beta) {
+    public Colony(NetworkAPI network, int numberOfAnts,String source, String destination, double alpha, double beta) {
         this.network = network;
         this.source = source;
         this.destination = destination;
         this.alpha = alpha;
         this.beta = beta;
+        this.numberOfAnts = numberOfAnts;
+        this.ants = new ArrayList<>();
+        this.bestSolution = 1000000000;
 
         for(int i = 0;i<numberOfAnts; i++){
             ants.add(new Ant(source, destination, alpha, beta));
         }
 
+
     }
     private void makeAntsSelectNextNode(){
         for(Ant ant: ants){
-            String currentNode = ant.getCurrentNode();
-            ant.selectLink(network.getNodeLinks(currentNode));
+            if(ant.isTravelling()){
+                String currentNode = ant.getCurrentNode();
+                ant.selectLink(network.getNodeLinks(currentNode));
+            }else{
+                this.numberOfSolution++;
+            }
+
         }
     }
     private void pheromoneUpdate(){
@@ -48,10 +59,33 @@ public class Colony {
             }
         }
     }
-    private void makeThoseAntsTravel(){
+    private void makeAntsTravel(){
         for(Ant ant: ants){
           ant.travel();
         }
     }
+    private void updateSolution(){
+
+        for(Ant ant: ants){
+            if(!ant.isTravelling() && bestSolution>ant.getTrailCost()){
+                bestSolution = ant.getTrailCost();
+                bestTrail = ant.getTrail();
+                //ants.remove(ant);
+            }
+
+        }
+    }
+
+    public void run(){
+        while(this.numberOfSolution<1){
+            makeAntsSelectNextNode();
+            pheromoneUpdate();
+            makeAntsTravel();
+            updateSolution();
+        }
+        System.out.println(this.bestSolution);
+        System.out.println(this.bestTrail);
+    }
+
 
 }
