@@ -11,7 +11,8 @@ public class Start {
 
     public static void main(String[] args) throws IOException {
 
-
+        //Routing cost = pheromone
+        //Setup cost  = cost
         NetworkAPI networkAPI = new NetworkAPI("/home/waldemar/IdeaProjects/mrk/src/networkFiles/janos-us-ca.txt","./networkFiles/D-D-M-N-C-A-N-N.txt");
 
         //System.out.println(networkAPI.getNodeLinks("Dallas").get(0).getId());
