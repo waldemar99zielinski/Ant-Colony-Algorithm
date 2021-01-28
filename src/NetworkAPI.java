@@ -41,7 +41,7 @@ public class NetworkAPI {
     }
     public void setupNetwork(){
         for(Link link:network.links()){
-            link.setSetupCost(1.0);
+            link.setSetupCost(10.0);
             link.setRoutingCost(1.0);
         }
     }
@@ -87,10 +87,10 @@ public class NetworkAPI {
             double currentPheromone = link.getRoutingCost();
             link.setRoutingCost(currentPheromone + value);
         });
-        System.out.println("[INFO] NetworkAPI: setLinkPheromone: between "+links.get(0).getFirstNode().getId()+" "+links.get(0).getSecondNode().getId() +" val="+value);
+        //System.out.println("[INFO] NetworkAPI: setLinkPheromone: between "+links.get(0).getFirstNode().getId()+" "+links.get(0).getSecondNode().getId() +" val="+value);
     }
     public void evaporatePheromone(double evaporationRate){
-        if(evaporationRate>=1.0 || evaporationRate<0.0){
+        if(evaporationRate>1.0 || evaporationRate<0.0){
             System.err.println("[ERR] Invalid evaporation rate: "+evaporationRate);
         }
         for(Link link:network.links()){
