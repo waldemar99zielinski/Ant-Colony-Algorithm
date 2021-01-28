@@ -15,6 +15,7 @@ public class City {
     private static final double maxX = 1;
     private static final double maxY = 1;
 
+
     public City(double longitude, double latitude, String name) {
         this.longitude = longitude;
         this.latitude = latitude;
@@ -49,4 +50,6 @@ public class City {
         Point2D point = new Point2D(lon, Math.log( Math.tan( Math.PI/4 + 0.5*lat )));
        // point.
     }
+
+    public City getCity() { return this; }
 }

@@ -23,10 +23,11 @@ public class Visualizer {
     private static final int BORDER_OFFSET = 5;
 
     Collection<City> cities = new ArrayList<>();
+    Collection<CityLink> cityLinks = new ArrayList<>();
 
     Collection<Circle> cityObjects = new ArrayList<>();
     Collection<Text> cityNames = new ArrayList<>();
-    Collection<Line> cityLinks = new ArrayList<>();
+    Collection<Line> cityEdges = new ArrayList<>();
 
 
     private Pane root = new Pane();
@@ -43,12 +44,12 @@ public class Visualizer {
         stage.setResizable(false);
 
         try {
-            loadCities();
+            loadNetwork();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        mapCitiesToCoords();
+//        mapCitiesToCoords();
         setupVisuals();
 
         addObjectsToRoot();
@@ -58,6 +59,7 @@ public class Visualizer {
     private void addObjectsToRoot() {
         root.getChildren().setAll(cityObjects);
         root.getChildren().addAll(cityNames);
+        root.getChildren().addAll(cityEdges);
     }
 
 
@@ -65,12 +67,12 @@ public class Visualizer {
         stage.show();
     }
 
-    private void loadCities() throws FileNotFoundException {
+    private void loadNetwork() throws FileNotFoundException {
 
         //to-do relative path .-.
         String modelPath = "C:\\Users\\Krzysztof\\Downloads\\Studia\\PW-20Z\\PSZT\\Projekt2\\Ant-Colony-Algorithm\\src\\networkFiles\\janos-us-ca.txt";
         String line = "";
-        String delims = "[ ]";
+//        String delims = "[ ]";
 
         Scanner scanner = new Scanner(new FileInputStream(modelPath));
         StringBuilder sb = new StringBuilder();
@@ -83,22 +85,33 @@ public class Visualizer {
         }
 
         //limit our content only to nodes
-        String capturedContent = sb.substring(sb.toString().indexOf("NODES") + 10, sb.toString().indexOf("# LINK SECTION") - 5);
+        String citySection = sb.substring(sb.toString().indexOf("NODES") + 10, sb.toString().indexOf("# LINK SECTION") - 4);
+
+        String cityLinksSection = sb.substring(sb.toString().indexOf("LINKS") + 10, sb.toString().indexOf("# DEMAND SECTION") - 4);
+
+        loadCities(citySection);
+        loadCityLinks(cityLinksSection);
 
 
+    }
+
+    private void loadCities(String citySection) {
+
+        String line = "";
+        String delims = "[ ]";
         //while a new node is available
-        while (capturedContent.contains("\n")) {
+        while (citySection.contains("\n")) {
 
-            int newlineIndex = capturedContent.indexOf("\n");
+            int newlineIndex = citySection.indexOf("\n");
 
             //get 'line' from text
-            line = capturedContent.substring(0, newlineIndex);
+            line = citySection.substring(0, newlineIndex);
 
             //split line into separate strings
             String[] tokens = line.split(delims);
 
             //shorten string left to parse
-            capturedContent = capturedContent.substring(newlineIndex+3);
+            citySection = citySection.substring(newlineIndex+3);
 
             //create a new city object based on data in the string
             cities.add(new City(Double.parseDouble(tokens[2]), Double.parseDouble(tokens[3]), tokens[0]));
@@ -106,12 +119,67 @@ public class Visualizer {
         }
 
         //get last node (no "\n" symbol there)
-        line = capturedContent;
+        line = citySection;
         String[] tokens = line.split(delims);
         cities.add(new City(Double.parseDouble(tokens[2]), Double.parseDouble(tokens[3]), tokens[0]));
 
+        mapCitiesToCoords();
     }
-    
+
+    private void loadCityLinks(String linkSection) {
+        String line = "";
+        String delims = "[ ]";
+
+        while (linkSection.contains("\n")) {
+            int newlineIndex = linkSection.indexOf("\n");
+
+            line = linkSection.substring(0, newlineIndex + 3);
+
+            String[] tokens = line.split(delims);
+
+            for(int i = 0; i < tokens.length; i++)
+                System.out.println(tokens[i]);
+
+
+            boolean foundSrc = false;
+            boolean foundDest = false;
+            City src = null;
+            City dest = null;
+
+
+            for(City city : cities) {
+
+                //found src
+                if (tokens[2].contains(city.getName()) ) {
+                    src = city.getCity();
+                    foundSrc = true;
+
+                //found dest
+                } else if (tokens[3].contains(city.getName()) ) {
+                    dest = city.getCity();
+                    foundDest = true;
+                }
+
+                //add new cityLink
+                if (foundSrc && foundDest) {
+                    cityLinks.add(new CityLink(src, dest));
+                    break;
+                }
+
+            }
+
+            linkSection = linkSection.substring(newlineIndex+3);
+
+
+        }
+
+
+        for (CityLink cityLink : cityLinks) {
+            //System.out.println("EDGE FROM: " + cityLink.getSrc().getName() + " TO: " + cityLink.getDest().getName());
+            //System.out.println(cityLink.getSrc().getX() + " " + cityLink.getSrc().getY() + " TO " + cityLink.getDest().getX() + " " + cityLink.getDest().getY());
+            cityEdges.add(cityLink.getEdge());
+        }
+    }
 
     private void mapCitiesToCoords() {
         double minX = 1000;
@@ -179,4 +247,5 @@ public class Visualizer {
             cityNames.add(text);
         }
     }
+
 }
