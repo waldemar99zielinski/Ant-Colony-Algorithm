@@ -34,7 +34,7 @@ public class Colony {
         this.bestSolution = 1000000000;
 
         for(int i = 0;i<numberOfAnts; i++){
-            ants.add(new Ant(source, destination, alpha, beta));
+            ants.add(new Ant(i, source, destination, alpha, beta));
         }
 
 
@@ -57,8 +57,8 @@ public class Colony {
             if(!ant.isTravelling()){
                 double generatedPheromone = Q/(ant.getTrailCost());
                 ArrayList<String> sol = ant.getTrail();
-                for(int i=0;i<sol.size() - 2;i++){
-                    network.setLinkPheromone(sol.get(i),sol.get(i+1), generatedPheromone);
+                for(int i = 0 ;i < sol.size() - 1; i++){
+                    network.setLinkPheromone(sol.get(i),sol.get(i + 1), generatedPheromone);
                 }
 
             }

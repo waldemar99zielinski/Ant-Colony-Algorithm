@@ -54,13 +54,15 @@ public class Ant {
     private final double beta;
 
     private Random random;
-
-    public Ant(String initNode, String destinationNode, double alpha, double beta){
+    private int id;
+    public Ant(int id, String initNode, String destinationNode, double alpha, double beta){
+        this.id = id;
         this.previousNode = null;
         this.currentNode = initNode;
         this.nextNode = null;
 
         this.trail = new ArrayList<>();
+        this.trail.add(initNode);
         this.trailCost = 0;
 
         this.sourceNode = initNode;
@@ -134,24 +136,29 @@ public class Ant {
             this.previousNode = this.currentNode;
             this.currentNode = this.nextNode;
             this.nextNode = null;
+
+            //System.out.println("["+id+"] @" + currentNode);
+
             if(currentNode.equals(destinationNode)){
                 this.isTravelling = false;
             }
+
+
         }
 
     }
     public void updateSolutionAndReturn(){
         if(!this.isTravelling()){
             //ant reached destination, return to the source
-//           String tmp = this.destinationNode;
-//           this.destinationNode = this.sourceNode;
-//           this.sourceNode = tmp;
-            this.currentNode = this.sourceNode;
+           String tmp = this.destinationNode;
+           this.destinationNode = this.sourceNode;
+           this.sourceNode = tmp;
+//            this.currentNode = this.sourceNode;
 
             //clear cost and paht
             this.trail.clear();
             this.trailCost = 0.0;
-
+            this.trail.add(this.currentNode);
             this.previousNode = "";
             this.isTravelling = true;
         }

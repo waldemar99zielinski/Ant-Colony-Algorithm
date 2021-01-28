@@ -1,6 +1,7 @@
 import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
 import javafx.application.Application;
+import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
@@ -38,12 +39,12 @@ public class Main extends Application {
     Collection<Circle> cityObjects = new ArrayList<>();
     Collection<Text> cityNames = new ArrayList<>();
     Collection<Line> cityEdges = new ArrayList<>();
-
+    Collection<Text> pheromoneValues = new ArrayList<>();
 
     ObservableList<Circle> points;// = FXCollections.observableArrayList(cityObjects);
-    ObservableList<Text> labels;// = FXCollections.observableArrayList(cityNames);
+    ObservableList<Text> pointLabels;// = FXCollections.observableArrayList(cityNames);
     ObservableList<Line> lines;// = FXCollections.observableArrayList(cityEdges);
-
+    ObservableList<Text> lineLabels;
 
 
     @Override
@@ -56,13 +57,19 @@ public class Main extends Application {
 
         setup();
         points = FXCollections.observableArrayList(cityObjects);
-        labels = FXCollections.observableArrayList(cityNames);
+        pointLabels = FXCollections.observableArrayList(cityNames);
         lines = FXCollections.observableArrayList(cityEdges);
-        root.getChildren().addAll(points);
-        root.getChildren().addAll(labels);
-        root.getChildren().addAll(lines);
+        lineLabels = FXCollections.observableArrayList(pheromoneValues);
+//
+//        root.getChildren().addAll(points);
+//        root.getChildren().addAll(pointLabels);
+//        root.getChildren().addAll(lines);
+//        root.getChildren().addAll(lineLabels);
 
-
+        root.getChildren().addAll(cityObjects);
+        root.getChildren().addAll(cityEdges);
+        root.getChildren().addAll(cityNames);
+        root.getChildren().addAll(pheromoneValues);
         primaryStage.show();
 
         // separate non-FX thread
@@ -71,17 +78,18 @@ public class Main extends Application {
             //for (int i = 0; i < 20; i++) {
             int i = 0;
             while (true) {
+
                 c.makeAntsSelectNextNode();
                 c.makeAntsTravel();
                 c.pheromoneUpdate();
 
-                updateAllEdges(networkAPI.getNetwork().links());
+                updateAllEdges(networkAPI.getNetwork().links() );
 
                 c.updateSolution();
                 //++i;
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(50);
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
@@ -105,7 +113,7 @@ public class Main extends Application {
         networkAPI = new NetworkAPI(networkPath, modelPath);
         networkAPI.setupNetwork();
 
-        c = new Colony(networkAPI, 1000,"LasVegas", "Miami", 1, 1);
+        c = new Colony(networkAPI, 100,"SanFrancisco", "Detroit", 1.25, 1);
     }
 
     public static void main(String[] args) {
@@ -116,16 +124,13 @@ public class Main extends Application {
 
         while (c.getNumberOfSolution() < 1) {
             c.makeAntsSelectNextNode();
+            c.makeAntsTravel();
             c.pheromoneUpdate();
 
             updateAllEdges(networkAPI.getNetwork().links() );
 
-            c.makeAntsTravel();
             c.updateSolution();
-//            SequentialTransition seqTransition = new SequentialTransition(
-//                    new PauseTransition(Duration.millis(10000)) // wait a second
-//            );
-//            seqTransition.play();
+
         }
     }
     private void loadNetwork() throws FileNotFoundException {
@@ -213,8 +218,15 @@ public class Main extends Application {
             cityLinksSection = cityLinksSection.substring(newlineIndex+3);
         }
 
-        for(CityLink link : cityLinks)
+
+
+
+        pheromoneValues.clear();
+        for(CityLink link : cityLinks) {
             cityEdges.add(link.getEdge());
+            pheromoneValues.add(link.getPheromoneValue());
+        }
+
 
     }
 
@@ -287,17 +299,30 @@ public class Main extends Application {
 
             for(CityLink cityLink : cityLinks) {
                 if (linkIdentifier.equals(cityLink.getIdentifier())) {
-                    cityLink.edgeUpdate(linkValue);
+                    try {
+                        cityLink.edgeUpdate(linkValue);
+                    } catch (IndexOutOfBoundsException x) {}
+                    //lineLabels.add(cityLink.getPheromoneValue());
                     break;
                 }
             }
         }
+
+        pheromoneValues.clear();
+        lineLabels.clear();
+        //System.out.println("There are " + cityLinks.size() + " citylinks");
+        //for(CityLink cityLink : cityLinks)
+            //lineLabels.add(cityLink.getPheromoneValue());
     }
+
     private void resetList() {
 //        cityEdges.clear();
         lines.clear();
-        for(CityLink link : cityLinks)
+        lineLabels.clear();
+        for(CityLink link : cityLinks) {
             lines.add(link.getEdge());
+            lineLabels.add(link.getPheromoneValue());
+        }
     }
 //    private void updateEdge();
 

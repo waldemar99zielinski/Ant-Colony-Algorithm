@@ -75,8 +75,8 @@ public class NetworkAPI {
     public void setLinkPheromone(String sourceName, String directionName, double value){
 
         ArrayList<Link>  links = (ArrayList<Link>) network.links().stream()
-                .filter(link -> (link.getFirstNode().getId().equals(sourceName) && link.getSecondNode().getId().equals(directionName)))
-                //|| (link.getFirstNode().getId().equals(directionName) && link.getSecondNode().getId().equals(sourceName)))
+                .filter(link -> (link.getFirstNode().getId().equals(sourceName) && link.getSecondNode().getId().equals(directionName))
+                || (link.getFirstNode().getId().equals(directionName) && link.getSecondNode().getId().equals(sourceName)))
                 .collect(Collectors.toList());
 
         if(links.isEmpty()){
@@ -87,7 +87,7 @@ public class NetworkAPI {
             double currentPheromone = link.getRoutingCost();
             link.setRoutingCost(currentPheromone + value);
         });
-        System.out.println("[INFO] NetworkAPI: setLinkPheromone: between "+links.get(0).getFirstNode().getId()+" "+links.get(0).getSecondNode().getId() +" val="+value);
+        System.out.println("[INFO] NetworkAPI: setLinkPheromone: between "+links.get(0).getFirstNode().getId()+" "+links.get(0).getSecondNode().getId() +" newval="+value);
     }
 
 
@@ -98,7 +98,12 @@ public class NetworkAPI {
         for(Link link:network.links()){
             double currentPheromone = link.getRoutingCost();
             //System.out.println(currentPheromone);
-            link.setRoutingCost(currentPheromone * evaporationRate);
+
+            if (currentPheromone * evaporationRate < 0.001)
+                link.setRoutingCost(0.001);
+            else
+                link.setRoutingCost(currentPheromone * evaporationRate);
+
         }
     }
 
