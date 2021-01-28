@@ -1,27 +1,37 @@
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.io.BufferedReader;
+
+import sndlib.core.network.Link;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
 
-public class Visualizer {
+public class Main extends Application {
 
     private static final int MAP_WIDTH = 800;
     private static final int MAP_HEIGHT = 800;
     private static final int BORDER_OFFSET = 5;
 
+    private static final String networkPath = "C:\\Users\\Krzysztof\\IdeaProjects\\Ant-Colony-Network\\src\\networkfiles\\janos-us-ca.txt";
+    private static final String modelPath = "C:\\Users\\Krzysztof\\IdeaProjects\\Ant-Colony-Network\\src\\networkfiles\\D-D-M-N-C-A-N-N.txt";
+
+    private Pane root = new Pane();
+    NetworkAPI networkAPI;
+    Colony c;
     Collection<City> cities = new ArrayList<>();
     Collection<CityLink> cityLinks = new ArrayList<>();
 
@@ -30,56 +40,105 @@ public class Visualizer {
     Collection<Line> cityEdges = new ArrayList<>();
 
 
-    private Pane root = new Pane();
-    private Stage stage;
+    ObservableList<Circle> points;// = FXCollections.observableArrayList(cityObjects);
+    ObservableList<Text> labels;// = FXCollections.observableArrayList(cityNames);
+    ObservableList<Line> lines;// = FXCollections.observableArrayList(cityEdges);
 
 
-    public Visualizer(Stage stage) {
 
-        this.stage = stage;
+    @Override
+    public void start(Stage primaryStage) throws Exception {
 
-        Scene scene = new Scene(root, MAP_WIDTH, MAP_HEIGHT, Color.NAVAJOWHITE);
-        stage.setTitle("Ant Colony - City Network Visualizer");
-        stage.setScene(scene);
-        stage.setResizable(false);
 
+        primaryStage.setTitle("Ant Colony - City Network Visualizer");
+        primaryStage.setResizable(false);
+        primaryStage.setScene(new Scene(root, MAP_WIDTH, MAP_HEIGHT, Color.WHITESMOKE));
+
+        setup();
+        points = FXCollections.observableArrayList(cityObjects);
+        labels = FXCollections.observableArrayList(cityNames);
+        lines = FXCollections.observableArrayList(cityEdges);
+        root.getChildren().addAll(points);
+        root.getChildren().addAll(labels);
+        root.getChildren().addAll(lines);
+
+
+        primaryStage.show();
+
+        // separate non-FX thread
+        // runnable for that thread
+        new Thread(() -> {
+            //for (int i = 0; i < 20; i++) {
+            int i = 0;
+            while (true) {
+                c.makeAntsSelectNextNode();
+                c.makeAntsTravel();
+                c.pheromoneUpdate();
+
+                updateAllEdges(networkAPI.getNetwork().links());
+
+                c.updateSolution();
+                //++i;
+
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+
+        }).start();
+        //colonyLoop(c);
+        networkAPI.saveNetwork();
+    }
+
+    private void setup() {
         try {
             loadNetwork();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (FileNotFoundException x) {
+            System.out.println(x.toString());
         }
 
-//        mapCitiesToCoords();
-        setupVisuals();
+        setupCityGraphics();
 
-        addObjectsToRoot();
-        draw();
+        networkAPI = new NetworkAPI(networkPath, modelPath);
+        networkAPI.setupNetwork();
+
+        c = new Colony(networkAPI, 1000,"LasVegas", "Miami", 1, 1);
     }
 
-    private void addObjectsToRoot() {
-        root.getChildren().setAll(cityObjects);
-        root.getChildren().addAll(cityNames);
-        root.getChildren().addAll(cityEdges);
+    public static void main(String[] args) {
+        launch(args);
     }
 
+    private void colonyLoop(Colony c) {
 
-    private void draw() {
-        stage.show();
+        while (c.getNumberOfSolution() < 1) {
+            c.makeAntsSelectNextNode();
+            c.pheromoneUpdate();
+
+            updateAllEdges(networkAPI.getNetwork().links() );
+
+            c.makeAntsTravel();
+            c.updateSolution();
+//            SequentialTransition seqTransition = new SequentialTransition(
+//                    new PauseTransition(Duration.millis(10000)) // wait a second
+//            );
+//            seqTransition.play();
+        }
     }
-
     private void loadNetwork() throws FileNotFoundException {
-
-        //to-do relative path .-.
-        String modelPath = "C:\\Users\\Krzysztof\\Downloads\\Studia\\PW-20Z\\PSZT\\Projekt2\\Ant-Colony-Algorithm\\src\\networkFiles\\janos-us-ca.txt";
         String line = "";
-//        String delims = "[ ]";
+        Scanner scanner = new Scanner(new FileInputStream(networkPath));
 
-        Scanner scanner = new Scanner(new FileInputStream(modelPath));
+
         StringBuilder sb = new StringBuilder();
 
         //while file has a new line available to read
         while (scanner.hasNextLine()) {
             line = scanner.nextLine();
+            //System.out.println(line);
             sb.append(line);
             sb.append("\n");
         }
@@ -89,141 +148,111 @@ public class Visualizer {
 
         String cityLinksSection = sb.substring(sb.toString().indexOf("LINKS") + 10, sb.toString().indexOf("# DEMAND SECTION") - 4);
 
+
         loadCities(citySection);
+        mapCitiesToCords();
         loadCityLinks(cityLinksSection);
-
-
     }
 
     private void loadCities(String citySection) {
-
         String line = "";
         String delims = "[ ]";
         //while a new node is available
         while (citySection.contains("\n")) {
 
             int newlineIndex = citySection.indexOf("\n");
-
             //get 'line' from text
             line = citySection.substring(0, newlineIndex);
-
             //split line into separate strings
             String[] tokens = line.split(delims);
-
             //shorten string left to parse
             citySection = citySection.substring(newlineIndex+3);
-
             //create a new city object based on data in the string
             cities.add(new City(Double.parseDouble(tokens[2]), Double.parseDouble(tokens[3]), tokens[0]));
-
         }
 
         //get last node (no "\n" symbol there)
         line = citySection;
         String[] tokens = line.split(delims);
         cities.add(new City(Double.parseDouble(tokens[2]), Double.parseDouble(tokens[3]), tokens[0]));
-
-        mapCitiesToCoords();
     }
 
-    private void loadCityLinks(String linkSection) {
+    private void loadCityLinks(String cityLinksSection) {
         String line = "";
         String delims = "[ ]";
 
-        while (linkSection.contains("\n")) {
-            int newlineIndex = linkSection.indexOf("\n");
-
-            line = linkSection.substring(0, newlineIndex + 3);
+        while (cityLinksSection.contains("\n")) {
+            int newlineIndex = cityLinksSection.indexOf("\n");
+            line = cityLinksSection.substring(0, newlineIndex + 3);
 
             String[] tokens = line.split(delims);
-
-            for(int i = 0; i < tokens.length; i++)
-                System.out.println(tokens[i]);
-
 
             boolean foundSrc = false;
             boolean foundDest = false;
             City src = null;
             City dest = null;
 
-
             for(City city : cities) {
-
                 //found src
                 if (tokens[2].contains(city.getName()) ) {
                     src = city.getCity();
                     foundSrc = true;
-
                 //found dest
                 } else if (tokens[3].contains(city.getName()) ) {
                     dest = city.getCity();
                     foundDest = true;
                 }
-
                 //add new cityLink
                 if (foundSrc && foundDest) {
-                    cityLinks.add(new CityLink(src, dest));
+                    cityLinks.add(new CityLink(tokens[0],src, dest));
                     break;
                 }
 
             }
 
-            linkSection = linkSection.substring(newlineIndex+3);
-
-
+            cityLinksSection = cityLinksSection.substring(newlineIndex+3);
         }
 
+        for(CityLink link : cityLinks)
+            cityEdges.add(link.getEdge());
 
-        for (CityLink cityLink : cityLinks) {
-            //System.out.println("EDGE FROM: " + cityLink.getSrc().getName() + " TO: " + cityLink.getDest().getName());
-            //System.out.println(cityLink.getSrc().getX() + " " + cityLink.getSrc().getY() + " TO " + cityLink.getDest().getX() + " " + cityLink.getDest().getY());
-            cityEdges.add(cityLink.getEdge());
-        }
     }
 
-    private void mapCitiesToCoords() {
+    private void mapCitiesToCords() {
         double minX = 1000;
         double minY = 1000;
         double maxX = -1000;
         double maxY = -1000;
         double cityLat, cityLong;
+        double percentageX, percentageY;
 
         //find min max values for normalisation
         for (City city : cities) {
 
             cityLong = city.getLongitude();
             cityLat = city.getLatitude();
-
             minX = Math.min(minX, cityLong);
             minY = Math.min(minY, cityLat);
             maxX = Math.max(maxX, cityLong);
             maxY = Math.max(maxY, cityLat);
         }
-
         //spread min max values to avoid cities at border
         minX -= BORDER_OFFSET;
         minY -= BORDER_OFFSET;
         maxX += BORDER_OFFSET;
         maxY += BORDER_OFFSET;
 
-
-        double percentageX, percentageY;
-
         //calculate relative screen position
         for(City city : cities) {
             percentageX = ((city.getLongitude() - minX) / (maxX - minX));
             percentageY = ((city.getLatitude() - minY) / (maxY - minY));
 
-
             city.setX(MAP_WIDTH * percentageX);
-
-            //y axis is inverted ofc
             city.setY(MAP_HEIGHT * (1 - percentageY));
         }
     }
 
-    private void setupVisuals() {
-
+    private void setupCityGraphics() {
         for (City city : cities) {
 
             //every city is represented by a circle and text object
@@ -247,5 +276,29 @@ public class Visualizer {
             cityNames.add(text);
         }
     }
+
+
+    private void updateAllEdges(Collection<Link> links) {
+        String linkIdentifier = "";
+        Double linkValue;
+        for(Link link : links) {
+            linkIdentifier = link.getId();
+            linkValue = link.getRoutingCost();
+
+            for(CityLink cityLink : cityLinks) {
+                if (linkIdentifier.equals(cityLink.getIdentifier())) {
+                    cityLink.edgeUpdate(linkValue);
+                    break;
+                }
+            }
+        }
+    }
+    private void resetList() {
+//        cityEdges.clear();
+        lines.clear();
+        for(CityLink link : cityLinks)
+            lines.add(link.getEdge());
+    }
+//    private void updateEdge();
 
 }

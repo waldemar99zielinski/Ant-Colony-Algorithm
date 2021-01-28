@@ -8,6 +8,8 @@ public class Ant {
     private String currentNode;
     private String nextNode;
     private double currentTravelCost;
+
+    private String sourceNode;
     private String destinationNode;
 
 
@@ -60,6 +62,8 @@ public class Ant {
 
         this.trail = new ArrayList<>();
         this.trailCost = 0;
+
+        this.sourceNode = initNode;
         this.destinationNode = destinationNode;
         this.isTravelling = true;
 
@@ -123,9 +127,9 @@ public class Ant {
     }
     public void travel(){
         if(this.isTravelling){
-            trail.add(nextNode);
-            trailCost += currentTravelCost;
-            currentTravelCost = 0;
+            this.trail.add(nextNode);
+            this.trailCost += this.currentTravelCost;
+            this.currentTravelCost = 0;
 
             this.previousNode = this.currentNode;
             this.currentNode = this.nextNode;
@@ -135,6 +139,28 @@ public class Ant {
             }
         }
 
+    }
+    public void updateSolutionAndReturn(){
+        if(!this.isTravelling()){
+            //ant reached destination, return to the source
+//           String tmp = this.destinationNode;
+//           this.destinationNode = this.sourceNode;
+//           this.sourceNode = tmp;
+            this.currentNode = this.sourceNode;
+
+            //clear cost and paht
+            this.trail.clear();
+            this.trailCost = 0.0;
+
+            this.previousNode = "";
+            this.isTravelling = true;
+        }
+    }
+    public void print(){
+        System.out.println("ANT");
+        // System.out.println("Trail: "+trail);
+        System.out.println("Cost: "+trailCost);
+        System.out.println();
     }
 
 }

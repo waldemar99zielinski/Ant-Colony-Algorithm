@@ -2,6 +2,7 @@ import sndlib.core.network.Link;
 import sndlib.core.network.Network;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Colony {
 
@@ -16,8 +17,8 @@ public class Colony {
     //algorithm parameters
     private double alpha;
     private double beta;
-    private double evaporationRate = 0.5;
-    private double Q = 1;
+    private double evaporationRate = 0.9;
+    private double Q = 10;
 
     private ArrayList<String> bestTrail;
     private double bestSolution;
@@ -38,7 +39,7 @@ public class Colony {
 
 
     }
-    private void makeAntsSelectNextNode(){
+    public void makeAntsSelectNextNode(){
         for(Ant ant: ants){
             if(ant.isTravelling()){
                 String currentNode = ant.getCurrentNode();
@@ -49,43 +50,56 @@ public class Colony {
 
         }
     }
-    private void pheromoneUpdate(){
+    public void pheromoneUpdate(){
         network.evaporatePheromone(this.evaporationRate);
 
         for(Ant ant: ants){
-            if(ant.isTravelling()){
-                double generatedPheromone = Q/(ant.getCurrentTravelCost() + ant.getTrailCost());
-                network.setLinkPheromone(ant.getCurrentNode(), ant.getNextNode(), generatedPheromone);
+            if(!ant.isTravelling()){
+                double generatedPheromone = Q/(ant.getTrailCost());
+                ArrayList<String> sol = ant.getTrail();
+                for(int i=0;i<sol.size() - 2;i++){
+                    network.setLinkPheromone(sol.get(i),sol.get(i+1), generatedPheromone);
+                }
+
             }
         }
     }
-    private void makeAntsTravel(){
+    public void makeAntsTravel(){
         for(Ant ant: ants){
-          ant.travel();
+            ant.travel();
         }
     }
-    private void updateSolution(){
+    public void updateSolution(){
 
         for(Ant ant: ants){
             if(!ant.isTravelling() && bestSolution>ant.getTrailCost()){
-                bestSolution = ant.getTrailCost();
-                bestTrail = ant.getTrail();
-                //ants.remove(ant);
+                this.bestSolution = ant.getTrailCost();
+                this.bestTrail = (ArrayList<String>) ant.getTrail().clone();
+
+            }
+            if(!ant.isTravelling()){
+                ant.updateSolutionAndReturn();
             }
 
         }
     }
 
     public void run(){
-        while(this.numberOfSolution<1){
+        int i = 0;
+        while(i<100){
             makeAntsSelectNextNode();
-            pheromoneUpdate();
             makeAntsTravel();
+            pheromoneUpdate();
             updateSolution();
+            i++;
+            //System.out.println(i);
         }
         System.out.println(this.bestSolution);
         System.out.println(this.bestTrail);
+        for (Ant ant:ants) {
+            ant.print();
+        }
     }
 
-
+    public int getNumberOfSolution() { return numberOfSolution; }
 }
