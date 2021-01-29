@@ -20,7 +20,7 @@ public class Colony {
     private double evaporationRate = 0.9;
     private double Q = 10;
 
-    private ArrayList<String> bestTrail;
+    private ArrayList<String> bestTrail = new ArrayList<>();
     private double bestSolution;
 
     public Colony(NetworkAPI network, int numberOfAnts,String source, String destination, double alpha, double beta) {
@@ -73,9 +73,15 @@ public class Colony {
     public void updateSolution(){
 
         for(Ant ant: ants){
-            if(!ant.isTravelling() && bestSolution>ant.getTrailCost()){
+            if(!ant.isTravelling() && bestSolution > ant.getTrailCost()){
+
+                //if (bestSolution > ant.getTrailCost())
+                    //printSolution();
+
+
                 this.bestSolution = ant.getTrailCost();
                 this.bestTrail = (ArrayList<String>) ant.getTrail().clone();
+
 
             }
             if(!ant.isTravelling()){
@@ -103,4 +109,12 @@ public class Colony {
     }
 
     public int getNumberOfSolution() { return numberOfSolution; }
+
+    public void printSolution() {
+        System.out.println("------------------");
+        System.out.println("[INFO] Cost of best solution ever found: " + bestSolution);
+        for (String s : bestTrail)
+            System.out.println(s);
+
+    }
 }

@@ -28,9 +28,7 @@ public final class LinkTracker {
 
     public Collection<Double> getCityLinkValueHistory() { return cityLinkValueHistory; }
 
-    public void createChart(Stage stage) {
-
-    }
+    public void createChart(Stage stage) {}
 
     public void saveToFile(int ANT_COUNT) {
         end = System.currentTimeMillis();
@@ -38,7 +36,7 @@ public final class LinkTracker {
 
         String src = cityLink.getSrc().getName();
         String dest = cityLink.getDest().getName();
-        String filename = src + "_" + dest + "_" + String.valueOf(ANT_COUNT) + "ants_" + alpha + "_" + timeElapsed + ".txt";
+        String filename = src + "_" + dest + "_" + String.valueOf(ANT_COUNT) + "ants_" + alpha + "_" + timeElapsed;
         StringBuilder sb = new StringBuilder();
                     //maffija
 

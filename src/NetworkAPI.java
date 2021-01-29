@@ -5,6 +5,7 @@ import sndlib.core.network.Link;
 import sndlib.core.network.Network;
 import sndlib.core.network.Node;
 
+import javax.xml.parsers.SAXParser;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -41,8 +42,10 @@ public class NetworkAPI {
     }
     public void setupNetwork(){
         for(Link link:network.links()){
-            link.setSetupCost(1.0);
+            link.setSetupCost( link.getModule(1008.0).getCost() );
+//            link.setSetupCost(1.0);
             link.setRoutingCost(1.0);
+
         }
         System.out.println("[INFO] NetworkAPI setup");
     }
@@ -50,12 +53,14 @@ public class NetworkAPI {
         SNDlibWriter writer = SNDlibIOFactory.newWriter(SNDlibIOFormat.NATIVE);
 
         try {
+            System.out.println("[INFO] Algorithm stopped. Saving network...");
             Writer networkWriter =  new FileWriter("network.txt");
             Writer modelWriter = new FileWriter("model.txt");
             writer.writeNetwork(network, networkWriter);
             writer.writeModel(model, modelWriter);
             networkWriter.close();
             modelWriter.close();
+            System.out.println("[INFO] Network saved");
         }
         catch(SNDlibWriteException | IOException swx) {
             System.err.println("[ERR] could not write network or model file: " + swx);
