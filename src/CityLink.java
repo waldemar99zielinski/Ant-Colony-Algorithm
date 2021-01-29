@@ -91,7 +91,7 @@ public class CityLink {
         int g = Integer.valueOf( currentColor.substring(4,6), 16);
         int b = Integer.valueOf( currentColor.substring(6,8), 16);
 
-        r = (int) (Math.round(value * 255) * 4);// /  (double)(ANT_COUNT / 5));
+        r = (int) (Math.round(value * 255  *4));///  (double)(ANT_COUNT / 5));
 
         if (r > 255)
             r = 255;

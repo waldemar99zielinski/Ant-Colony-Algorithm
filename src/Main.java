@@ -23,7 +23,7 @@ import java.util.Scanner;
 
 public class Main extends Application {
 
-    private static final int MAP_WIDTH = 800;
+    private static final int MAP_WIDTH = 1000;
     private static final int MAP_HEIGHT = 800;
     private static final int BORDER_OFFSET = 5;
     private static final int ANT_COUNT = 100;
@@ -68,7 +68,7 @@ public class Main extends Application {
 
         primaryStage.setTitle("Ant Colony - City Network Visualizer");
         primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(root, MAP_WIDTH, MAP_HEIGHT, Color.WHITE));
+        primaryStage.setScene(new Scene(root, MAP_WIDTH, MAP_HEIGHT, Color.ANTIQUEWHITE));
 
         try {
             loadNetwork();
