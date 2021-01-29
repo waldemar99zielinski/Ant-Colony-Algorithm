@@ -23,5 +23,6 @@ Zalecamy korzystanie z IntelliJ IDE. W celu kompilacji i uruchomienia projektu n
 
 ## Wizualizacja
 
-Przykład uruchomionego algorytmu dla trasy Portland - Miami
+Przykład uruchomionego algorytmu dla trasy Portland-Miami
+
 ![mapa](./assets/mapa_alfa11_koszt_1.PNG)
