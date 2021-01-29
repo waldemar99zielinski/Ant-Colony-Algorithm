@@ -1,4 +1,6 @@
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -7,6 +9,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import javafx.stage.WindowEvent;
 import sndlib.core.network.Link;
 
 import java.io.FileInputStream;
@@ -56,6 +59,7 @@ public class Main extends Application {
         primaryStage.setScene(new Scene(root, MAP_WIDTH, MAP_HEIGHT, Color.WHITESMOKE));
 
         setup();
+        eventSetup(primaryStage);
 
         root.getChildren().addAll(cityObjects);
         root.getChildren().addAll(cityEdges);
@@ -275,5 +279,15 @@ public class Main extends Application {
 
 //        pheromoneValues.clear();
 //        lineLabels.clear();
+    }
+
+    private void eventSetup(Stage primaryStage) {
+        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+            @Override
+            public void handle(WindowEvent event) {
+                Platform.exit();
+                System.exit(0);
+            }
+        });
     }
 }
