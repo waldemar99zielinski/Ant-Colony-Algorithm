@@ -14,6 +14,7 @@ import sndlib.core.network.Link;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Scanner;
@@ -23,9 +24,9 @@ public class Main extends Application {
     private static final int MAP_WIDTH = 800;
     private static final int MAP_HEIGHT = 800;
     private static final int BORDER_OFFSET = 5;
-    private static final int ANT_COUNT = 50;
-    private static final String startNode = "Vancouver";
-    private static final String endNode = "Miami";
+    private static final int ANT_COUNT = 100;
+    private static final String startNode = "Seattle";
+    private static final String endNode = "WashingtonDC";
     private static final double ALPHA = 1.15;
     private static final double BETA = 1.0;
 
@@ -36,6 +37,7 @@ public class Main extends Application {
 
     NetworkAPI networkAPI;
     Colony c;
+    LinkTracker linkTracker = null;
 
     Collection<City> cities = new ArrayList<>();
     Collection<CityLink> cityLinks = new ArrayList<>();
@@ -71,6 +73,7 @@ public class Main extends Application {
 
         new Thread(() -> {
 
+            System.out.println("[INFO] Colony thread started.");
             while (true) {
 
                 c.makeAntsSelectNextNode();
@@ -78,6 +81,7 @@ public class Main extends Application {
                 c.pheromoneUpdate();
 
                 updateAllEdges( networkAPI.getNetwork().links() );
+                linkTracker.trackLink();
 
                 c.updateSolution();
 
@@ -94,11 +98,15 @@ public class Main extends Application {
 
     private void setup() {
 
+        System.out.println("[INFO] Setup launched");
         try {
             loadNetwork();
+            System.out.println("[INFO] Network loaded");
         } catch (FileNotFoundException x) {
-            System.out.println("File fked");
+            System.err.println("[ERR] File not found");
         }
+
+        setupLinkTracker("Calgary", "Winnipeg");
 
         setupCityGraphics();
 
@@ -285,9 +293,20 @@ public class Main extends Application {
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
+                linkTracker.saveToFile(ANT_COUNT);
                 Platform.exit();
                 System.exit(0);
             }
         });
+    }
+
+    private void setupLinkTracker(String trackerStart, String trackerEnd) {
+        for(CityLink link : cityLinks) {
+            if (link.getSrc().getName().equals(trackerStart) && link.getDest().getName().equals(trackerEnd)) {
+                linkTracker = new LinkTracker(link, ALPHA);
+                System.out.println("[INFO] LinkTracker set to track " + trackerStart + "-" + trackerEnd);
+                break;
+            }
+        }
     }
 }

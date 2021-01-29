@@ -37,13 +37,14 @@ public class NetworkAPI {
             System.err.println("[ERR] could not parse network or model file: " + spx);
         }
 
-
+        System.out.println("[INFO] NetworkAPI created");
     }
     public void setupNetwork(){
         for(Link link:network.links()){
             link.setSetupCost(1.0);
             link.setRoutingCost(1.0);
         }
+        System.out.println("[INFO] NetworkAPI setup");
     }
     public void saveNetwork(){
         SNDlibWriter writer = SNDlibIOFactory.newWriter(SNDlibIOFormat.NATIVE);
@@ -87,7 +88,7 @@ public class NetworkAPI {
             double currentPheromone = link.getRoutingCost();
             link.setRoutingCost(currentPheromone + value);
         });
-        System.out.println("[INFO] NetworkAPI: setLinkPheromone: between "+links.get(0).getFirstNode().getId()+" "+links.get(0).getSecondNode().getId() +" newval="+value);
+        //System.out.println("[INFO] NetworkAPI: setLinkPheromone: between "+links.get(0).getFirstNode().getId()+" "+links.get(0).getSecondNode().getId() +" newval="+value);
     }
 
 

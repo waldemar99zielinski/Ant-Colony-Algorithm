@@ -35,7 +35,7 @@ public class CityLink {
         text.setY((edge.getStartY() + edge.getEndY())/2);
         text.setText(String.valueOf(pheromoneValue));
         text.setFill(Color.BLACK);
-        System.out.println("[EDGE] Pheromone value: " + pheromoneValue);
+        //System.out.println("[EDGE] Pheromone value: " + pheromoneValue);
 
     }
 
@@ -91,7 +91,7 @@ public class CityLink {
         int g = Integer.valueOf( currentColor.substring(4,6), 16);
         int b = Integer.valueOf( currentColor.substring(6,8), 16);
 
-        r = (int) Math.round(value * 255 /  (double)(ANT_COUNT / 4));
+        r = (int) Math.round(value * 255 /  (double)(ANT_COUNT / 5));
 
         if (r > 255)
             r = 255;

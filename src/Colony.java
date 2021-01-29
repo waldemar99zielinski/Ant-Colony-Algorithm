@@ -37,6 +37,7 @@ public class Colony {
             ants.add(new Ant(i, source, destination, alpha, beta));
         }
 
+        System.out.println("[INFO] Colony created");
 
     }
     public void makeAntsSelectNextNode(){
