@@ -29,14 +29,14 @@ public class CityLink {
         edge.setEndX(dest.getX());
         edge.setEndY(dest.getY());
         edge.setStroke(Color.rgb(0,0,0));
-        edge.setStrokeWidth(3);
+        edge.setStrokeWidth(2);
 
         text.setX((edge.getStartX() + 10 + edge.getEndX())/2);
         text.setY((edge.getStartY() + edge.getEndY())/2);
         text.setText(String.valueOf(pheromoneValue));
         text.setFill(Color.BLACK);
         System.out.println("[EDGE] Pheromone value: " + pheromoneValue);
-//        text.set
+
     }
 
 
@@ -45,39 +45,39 @@ public class CityLink {
     public Line getEdge() { return edge; }
     public String getIdentifier() { return identifier; }
 
-    public void setStroke(double factor) {
-        String currentColor = edge.getStroke().toString();
+//    public void setStroke(double factor) {
+//        String currentColor = edge.getStroke().toString();
+//
+//        int r = Integer.valueOf( currentColor.substring(2,4), 16);
+//        int g = Integer.valueOf( currentColor.substring(4,6), 16);
+//        int b = Integer.valueOf( currentColor.substring(6,8), 16);
+//
+//        double temp_r  = r * factor * 100;
+//    }
 
-        int r = Integer.valueOf( currentColor.substring(2,4), 16);
-        int g = Integer.valueOf( currentColor.substring(4,6), 16);
-        int b = Integer.valueOf( currentColor.substring(6,8), 16);
 
-        double temp_r  = r * factor * 100;
-    }
+//    public void edgeUpdate(boolean isUsed) {
+//        String currentColor = edge.getStroke().toString();
+//
+//        int r = Integer.valueOf( currentColor.substring(2,4), 16);
+//        int g = Integer.valueOf( currentColor.substring(4,6), 16);
+//        int b = Integer.valueOf( currentColor.substring(6,8), 16);
+//
+//        if (isUsed)
+//            r += USAGE_VALUE;
+//        else
+//            r -= EXTINCTION_VALUE;
+//
+//        if (r > 255)
+//            r = 255;
+//        else if (r < 0)
+//            r = 0;
+//
+//        edge.setStroke(Color.rgb(r,g,b));
+//
+//    }
 
-
-    public void edgeUpdate(boolean isUsed) {
-        String currentColor = edge.getStroke().toString();
-
-        int r = Integer.valueOf( currentColor.substring(2,4), 16);
-        int g = Integer.valueOf( currentColor.substring(4,6), 16);
-        int b = Integer.valueOf( currentColor.substring(6,8), 16);
-
-        if (isUsed)
-            r += USAGE_VALUE;
-        else
-            r -= EXTINCTION_VALUE;
-
-        if (r > 255)
-            r = 255;
-        else if (r < 0)
-            r = 0;
-
-        edge.setStroke(Color.rgb(r,g,b));
-
-    }
-
-    public void edgeUpdate(double value) {
+    public void edgeUpdate(double value, int ANT_COUNT) {
         String currentColor = edge.getStroke().toString();
         pheromoneValue = value;
         String temp = String.valueOf(pheromoneValue);
@@ -91,11 +91,10 @@ public class CityLink {
         int g = Integer.valueOf( currentColor.substring(4,6), 16);
         int b = Integer.valueOf( currentColor.substring(6,8), 16);
 
-        r = (int) Math.round(value * 255);
-//        Integer.
+        r = (int) Math.round(value * 255 /  (double)(ANT_COUNT / 4));
 
         if (r > 255)
-            r = 254;
+            r = 255;
         else if (r < 0)
             r = 0;
 

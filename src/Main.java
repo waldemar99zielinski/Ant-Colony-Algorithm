@@ -1,9 +1,4 @@
-import javafx.animation.PauseTransition;
-import javafx.animation.SequentialTransition;
 import javafx.application.Application;
-import javafx.beans.Observable;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -11,7 +6,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
 
 import sndlib.core.network.Link;
 
@@ -26,13 +20,20 @@ public class Main extends Application {
     private static final int MAP_WIDTH = 800;
     private static final int MAP_HEIGHT = 800;
     private static final int BORDER_OFFSET = 5;
+    private static final int ANT_COUNT = 50;
+    private static final String startNode = "Vancouver";
+    private static final String endNode = "Miami";
+    private static final double ALPHA = 1.15;
+    private static final double BETA = 1.0;
 
-    private static final String networkPath = "C:\\Users\\Krzysztof\\IdeaProjects\\Ant-Colony-Network\\src\\networkfiles\\janos-us-ca.txt";
-    private static final String modelPath = "C:\\Users\\Krzysztof\\IdeaProjects\\Ant-Colony-Network\\src\\networkfiles\\D-D-M-N-C-A-N-N.txt";
+    private static final String networkPath = ".\\src\\networkfiles\\janos-us-ca.txt";
+    private static final String modelPath = ".\\src\\networkfiles\\D-D-M-N-C-A-N-N.txt";
 
     private Pane root = new Pane();
+
     NetworkAPI networkAPI;
     Colony c;
+
     Collection<City> cities = new ArrayList<>();
     Collection<CityLink> cityLinks = new ArrayList<>();
 
@@ -41,52 +42,40 @@ public class Main extends Application {
     Collection<Line> cityEdges = new ArrayList<>();
     Collection<Text> pheromoneValues = new ArrayList<>();
 
-    ObservableList<Circle> points;// = FXCollections.observableArrayList(cityObjects);
-    ObservableList<Text> pointLabels;// = FXCollections.observableArrayList(cityNames);
-    ObservableList<Line> lines;// = FXCollections.observableArrayList(cityEdges);
-    ObservableList<Text> lineLabels;
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
-
+    public void start(Stage primaryStage) {
 
         primaryStage.setTitle("Ant Colony - City Network Visualizer");
         primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(root, MAP_WIDTH, MAP_HEIGHT, Color.WHITESMOKE));
 
         setup();
-        points = FXCollections.observableArrayList(cityObjects);
-        pointLabels = FXCollections.observableArrayList(cityNames);
-        lines = FXCollections.observableArrayList(cityEdges);
-        lineLabels = FXCollections.observableArrayList(pheromoneValues);
-//
-//        root.getChildren().addAll(points);
-//        root.getChildren().addAll(pointLabels);
-//        root.getChildren().addAll(lines);
-//        root.getChildren().addAll(lineLabels);
 
         root.getChildren().addAll(cityObjects);
         root.getChildren().addAll(cityEdges);
         root.getChildren().addAll(cityNames);
         root.getChildren().addAll(pheromoneValues);
+
         primaryStage.show();
 
-        // separate non-FX thread
-        // runnable for that thread
+
         new Thread(() -> {
-            //for (int i = 0; i < 20; i++) {
-            int i = 0;
+
             while (true) {
 
                 c.makeAntsSelectNextNode();
                 c.makeAntsTravel();
                 c.pheromoneUpdate();
 
-                updateAllEdges(networkAPI.getNetwork().links() );
+                updateAllEdges( networkAPI.getNetwork().links() );
 
                 c.updateSolution();
-                //++i;
 
                 try {
                     Thread.sleep(50);
@@ -94,18 +83,17 @@ public class Main extends Application {
                     ex.printStackTrace();
                 }
             }
-
-
         }).start();
-        //colonyLoop(c);
+
         networkAPI.saveNetwork();
     }
 
     private void setup() {
+
         try {
             loadNetwork();
         } catch (FileNotFoundException x) {
-            System.out.println(x.toString());
+            System.out.println("File fked");
         }
 
         setupCityGraphics();
@@ -113,46 +101,25 @@ public class Main extends Application {
         networkAPI = new NetworkAPI(networkPath, modelPath);
         networkAPI.setupNetwork();
 
-        c = new Colony(networkAPI, 100,"SanFrancisco", "Detroit", 1.25, 1);
+        c = new Colony(networkAPI, ANT_COUNT, startNode, endNode, ALPHA, BETA);
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
-
-    private void colonyLoop(Colony c) {
-
-        while (c.getNumberOfSolution() < 1) {
-            c.makeAntsSelectNextNode();
-            c.makeAntsTravel();
-            c.pheromoneUpdate();
-
-            updateAllEdges(networkAPI.getNetwork().links() );
-
-            c.updateSolution();
-
-        }
-    }
     private void loadNetwork() throws FileNotFoundException {
+
         String line = "";
         Scanner scanner = new Scanner(new FileInputStream(networkPath));
-
-
         StringBuilder sb = new StringBuilder();
 
         //while file has a new line available to read
         while (scanner.hasNextLine()) {
             line = scanner.nextLine();
-            //System.out.println(line);
             sb.append(line);
             sb.append("\n");
         }
 
         //limit our content only to nodes
-        String citySection = sb.substring(sb.toString().indexOf("NODES") + 10, sb.toString().indexOf("# LINK SECTION") - 4);
-
-        String cityLinksSection = sb.substring(sb.toString().indexOf("LINKS") + 10, sb.toString().indexOf("# DEMAND SECTION") - 4);
-
+        String citySection =        sb.substring(sb.toString().indexOf("NODES") + 10, sb.toString().indexOf("# LINK SECTION") - 4);
+        String cityLinksSection =   sb.substring(sb.toString().indexOf("LINKS") + 10, sb.toString().indexOf("# DEMAND SECTION") - 4);
 
         loadCities(citySection);
         mapCitiesToCords();
@@ -162,6 +129,7 @@ public class Main extends Application {
     private void loadCities(String citySection) {
         String line = "";
         String delims = "[ ]";
+
         //while a new node is available
         while (citySection.contains("\n")) {
 
@@ -188,8 +156,8 @@ public class Main extends Application {
 
         while (cityLinksSection.contains("\n")) {
             int newlineIndex = cityLinksSection.indexOf("\n");
-            line = cityLinksSection.substring(0, newlineIndex + 3);
 
+            line = cityLinksSection.substring(0, newlineIndex + 3);
             String[] tokens = line.split(delims);
 
             boolean foundSrc = false;
@@ -209,16 +177,13 @@ public class Main extends Application {
                 }
                 //add new cityLink
                 if (foundSrc && foundDest) {
-                    cityLinks.add(new CityLink(tokens[0],src, dest));
+                    cityLinks.add(new CityLink(tokens[0], src, dest));
                     break;
                 }
-
             }
 
             cityLinksSection = cityLinksSection.substring(newlineIndex+3);
         }
-
-
 
 
         pheromoneValues.clear();
@@ -289,10 +254,10 @@ public class Main extends Application {
         }
     }
 
-
     private void updateAllEdges(Collection<Link> links) {
         String linkIdentifier = "";
         Double linkValue;
+
         for(Link link : links) {
             linkIdentifier = link.getId();
             linkValue = link.getRoutingCost();
@@ -300,7 +265,7 @@ public class Main extends Application {
             for(CityLink cityLink : cityLinks) {
                 if (linkIdentifier.equals(cityLink.getIdentifier())) {
                     try {
-                        cityLink.edgeUpdate(linkValue);
+                        cityLink.edgeUpdate(linkValue, ANT_COUNT);
                     } catch (IndexOutOfBoundsException x) {}
                     //lineLabels.add(cityLink.getPheromoneValue());
                     break;
@@ -308,22 +273,7 @@ public class Main extends Application {
             }
         }
 
-        pheromoneValues.clear();
-        lineLabels.clear();
-        //System.out.println("There are " + cityLinks.size() + " citylinks");
-        //for(CityLink cityLink : cityLinks)
-            //lineLabels.add(cityLink.getPheromoneValue());
+//        pheromoneValues.clear();
+//        lineLabels.clear();
     }
-
-    private void resetList() {
-//        cityEdges.clear();
-        lines.clear();
-        lineLabels.clear();
-        for(CityLink link : cityLinks) {
-            lines.add(link.getEdge());
-            lineLabels.add(link.getPheromoneValue());
-        }
-    }
-//    private void updateEdge();
-
 }
